@@ -1,0 +1,242 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[top=20mm,bottom=20mm,left=22mm,right=22mm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{stmaryrd}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{needspace}
+
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{sig}{HTML}{7A5A12}
+\definecolor{seq}{HTML}{1F4E8C}
+\definecolor{grey}{HTML}{6E6A63}
+\usepackage[colorlinks=true,allcolors=seq]{hyperref}
+
+\color{ink}
+\titleformat{\section}{\large\bfseries\color{seq}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{sig}}{\thesubsection}{0.6em}{}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\cont}{\mathbin{\triangleright}}
+\newcommand{\comp}{\mathbin{\triangleleft}}
+\newcommand{\sem}[1]{\llbracket #1 \rrbracket}
+\newcommand{\note}{\emph{Containers for Typed Agentic AI}}
+
+\title{\vspace{-14mm}\bfseries Vocabulary\\[1mm]
+\large\normalfont Containers, state, and two things called a harness}
+\author{\normalsize Robin Langer \and \normalsize Claude (Opus 5)}
+\date{\normalsize 19 September 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{center}
+\begin{minipage}{0.88\textwidth}
+\small\color{grey}
+A working glossary for the framework of Neil Ghani's \note, fixing four terms that are used
+loosely across the implementations in \code{\textasciitilde/git/gold}. The definitions are
+\emph{stipulative}: they say what each word means here, so that a sentence using it can be
+checked. The last of them --- \emph{harness} --- turns out to name two different things, and
+the note ends by asking which one the harness running a coding agent actually is.
+\end{minipage}
+\end{center}
+
+\vspace{3mm}
+
+\noindent
+Notation. A container is a pair $(P,R)$, written $P \cont R$: a type $P$ of \textbf{prompts}
+(shapes) and, for each $p : P$, a type $R\,p$ of valid \textbf{responses} (positions).
+Equivalently $\sum_{p:P} y^{R\,p}$.
+
+\section{The four terms}
+
+\subsection{Stateful container}
+
+A container whose positions are states:
+\[
+  \Delta S \;=\; S \cont (\lambda\_.\,S) \;=\; \sum_{s:S} y^{S}.
+\]
+Both legs are $S$: the prompt is the state you are in, the response is the state you are in. It
+carries no question and no answer --- only a place to keep something. Its extension
+$\sem{\Delta S}X = S \times X^{S}$ is the store comonad.
+
+That the \emph{shapes} are also $S$ is forced rather than incidental: a state you cannot read is
+not a state, so the prompt type must expose $S$ too. The name records the interesting half.
+
+\subsection{State handler}
+
+A container morphism whose domain is a tensor of a container and a stateful container,
+\[
+  \Delta S \otimes X \;\longrightarrow\; Y .
+\]
+Under the Dirichlet tensor (shapes multiply, positions multiply),
+\[
+  \Delta S \otimes X \;=\; (S \times X_0) \cont \bigl(\lambda(s,x_0).\,S \times X_1 x_0\bigr),
+\]
+so such a morphism is exactly a pair
+\[
+  \mathrm{fwd} : S \times X_0 \longrightarrow Y_0,
+  \qquad
+  \mathrm{bwd} : \textstyle\prod_{(s,x_0)}\bigl(Y_1(\mathrm{fwd}(s,x_0)) \longrightarrow S \times X_1 x_0\bigr).
+\]
+The backward leg \textbf{splits}, by the universal property of the product in the position, into a
+state \emph{writeback} component ($S$) and an ordinary \emph{input back-map} ($X_1$). That split is
+the whole reason the tensor is the right home for state. Specialising $X = y$ and
+$Y = A \cont (\lambda\_.\,B)$ gives precisely a lens: $\mathrm{get} : S \to A$,
+$\mathrm{put} : S \times B \to S$.
+
+\medskip
+\noindent\textbf{Two warnings, since ``tensor'' is load-bearing above.}
+
+\emph{$\otimes$ is not $\comp$.} We have $\Delta S \otimes \Delta T = \Delta(S \times T)$ --- states
+multiply, $4y^4$ --- whereas $\Delta S \comp \Delta T$ is store-of-store, $8y^4$. The tensor
+grading is a retract of the composition grading, not a fibre, and the clean writeback split is
+specifically a tensor phenomenon. A ``state handler'' composed rather than tensored is a different
+object and does not have it.
+
+\emph{$\otimes$ is not $\times$.} The categorical product offers both sides and answers
+\emph{one}; the tensor offers both and answers \emph{both}. In Kelvingrove these are
+\code{pick}/\code{$\times$} and \code{parallel}/\code{$\otimes$} respectively, and swapping them is
+the easiest mistake in that codebase. ``Tensor'' above means answer-both.
+
+\subsection{Handler; open agent}
+
+Both mean: a container morphism. A morphism $(P,R) \to (Q,T)$ is a pair
+\[
+  u : P \longrightarrow Q,
+  \qquad
+  f : (p : P) \longrightarrow T(u\,p) \longrightarrow R\,p ,
+\]
+control flowing down through $u$ and data flowing back up through $f$.
+
+They are two names for one thing, taken from two directions. \emph{Handler} names the obligation
+--- something arrives and must be answered. \emph{Open agent} names the means --- it is answered by
+delegating onward, and the openness is the domain it delegates into. A project manager delegating
+to a developer, an interpreter, a device driver, and an LLM agent calling a tool are all this, and
+the framework's claim is that they are the same construction rather than four analogies.
+
+\medskip
+\noindent\textbf{Not to be confused with an async function, which is a \emph{position} in a
+container} --- a member of some $R\,p$, not a morphism.
+
+The confusion is understandable, because \code{async f : A -> Promise<B>} is written with an arrow
+and so looks like the $u$ leg of something. The discriminating test is \emph{legs}: a morphism is a
+pair of maps, and the second one --- the backward leg --- is what carries the answer home. An async
+function has no backward leg, because it is not standing between two interfaces; it is the value
+that comes back along somebody else's. Awaiting it is consuming a position.
+
+\subsection{Harness}
+
+\emph{In Ghani's sense:} a stateful container. The thing that holds $S$ while the work goes on
+around it.
+
+\emph{The Claude Code harness:} the subject of the next section, because ``is it a container or a
+container morphism?'' turns out to be three questions wearing one coat.
+
+\section{Is the Claude Code harness a container or a container morphism?}
+
+Asking whether it is a container \emph{or} a morphism is close to asking whether a group is a set
+or a homomorphism. Container and morphism are object and arrow; a thing is not one to the exclusion
+of the other. The honest answer is that the harness stands in three relations at once, to three
+different questions.
+
+\subsection*{1. What does it look like to the model? A container.}
+
+Its prompts are the tool calls --- \code{Bash}, \code{Read}, \code{Edit}, \code{Agent},
+\code{ToolSearch} --- and for each, the responses are what comes back: an exit code and a stream of
+bytes, a file's contents, a subagent's report. The dependence is real and checkable: the response
+type varies with the \emph{value} of the call, not merely its type.
+
+It is a container in the strong sense rather than the loose one. The prompt set is not fixed:
+\emph{deferred} tools have visible names and no loaded schema, and there is a prompt ---
+\code{ToolSearch} --- whose response \textbf{enlarges the set of prompts available afterwards}. A
+model in which $P$ is a fixed set up front cannot say that; $\comp$ says it immediately, because
+composition is exactly the operation under which one call's position determines the next call's
+available shapes.
+
+\subsection*{2. What does it do? A morphism.}
+
+It answers the model's prompts by issuing prompts on other interfaces --- the operating system, the
+filesystem, the network, a subagent --- and translating the replies back into the response it owed.
+Control down, data up. That is the definition, with nothing left over.
+
+\subsection*{3. What does it carry? A $\Delta S$.}
+
+The working directory, the permission mode, which tool schemas are loaded rather than deferred, the
+table of background tasks. None of this is in the model's context, and the tell is that the model
+must be \emph{told} when it changes:
+\begin{quote}
+\code{Shell cwd was reset to \textasciitilde/git/gold/from-neil}
+\end{quote}
+Being told is the signature of state one does not own. So the state is real, and it is
+harness-side.
+
+\subsection*{The resolution}
+
+It is already written down, about federation members, and it applies verbatim:
+\begin{quote}\itshape
+each member \textbf{has} a container and \textbf{is} a morphism: the container is its interface,
+the morphism is its behaviour.
+\end{quote}
+The Claude Code harness \emph{has} a container (what the model sees), \emph{is} a morphism (what it
+does to the world), and \emph{carries} a $\Delta S$ (what it remembers between calls). Put the
+three together and the vocabulary above already has the word for it: a \textbf{state handler},
+$\Delta S \otimes X \to Y$, with $X$ the interfaces it delegates into and $\Delta S$ the session
+state it keeps.
+
+So the two senses of ``harness'' do not clash --- they compose. The Claude Code harness \emph{is} a
+harness in Ghani's sense, in the precise sense that it is the thing holding the $\Delta S$ that the
+model does not hold. The equivocation dissolves once one notices that the model and the harness
+were never candidates for the same slot.
+
+\medskip
+\noindent\textbf{Mai nafka minah.} If the harness were merely a container, the question ``what
+happens to the state between two tool calls?'' would have no home in the formalism, and the answer
+would be supplied silently by the implementation. As a state handler it has a home --- the
+writeback component of $\mathrm{bwd}$ --- which is a thing one can be right or wrong about. That is
+the practical difference, and it is why the distinction is worth the words.
+
+\section{The same four terms elsewhere}
+
+\begin{center}\footnotesize
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{28mm}>{\raggedright\arraybackslash}p{52mm}>{\raggedright\arraybackslash}p{38mm}@{}}
+\toprule
+\textbf{here} & \textbf{the note} & \textbf{Kelvingrove (Julia)} & \textbf{stalin / tower (TypeScript)}\\
+\midrule
+container & container $(P,R)$ & \code{Itf}, \code{AbstractItf} & the container type in \code{lib/algebra.ts}\\
+handler / open agent & event handler & \code{Lens} (\code{fwd}/\code{bwd}) & morphism in \code{morphisms.ts}\\
+stateful container $\Delta S$ & --- & \code{Itf(S,S)} & ---\\
+state handler & --- & \code{Wrkr} --- ``stateful morphism; state as \code{Itf(S,S) $\otimes$ D}'' & \code{state.ts} (unverified)\\
+tensor $\otimes$ & $\boxtimes$ & \code{ParallelItf}, \code{parallel} & $\boxtimes$ in \code{lib/algebra.ts}\\
+product $\times$ & $\times$ & \code{PickItf}, \code{pick} & $\times$ in \code{lib/algebra.ts}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\noindent\small
+$\Delta S$ and the state handler are \emph{not} in the note. They come from MacBeth's third
+document (15 September 2026), and Kelvingrove's \code{Wrkr} is the same construction arrived at
+independently and given a type. The row marked \emph{unverified} is exactly that: \code{state.ts}
+has not been read against this definition.
+
+\needspace{8\baselineskip}
+\section*{Sources}
+
+\begin{itemize}[nosep,leftmargin=*,itemsep=1pt]\small
+\item Neil Ghani, \note{} --- \code{programming-with-containers.pdf}
+\item MacBeth, Doc \#3 --- \code{workers-state-via-tensor.pdf}, and its covering mail
+\item \emph{My Harness as a Worker} --- \code{my-harness-as-a-worker.pdf}, \S1--\S2
+\item \emph{Three container formalisms} --- \code{../kg-notes/container-formalisms.pdf}
+\item \code{../kalvingrove/CLAUDE.md}, the vocabulary map and the $\times$/$\otimes$ trap
+\item \code{../federation/README.md}, ``each member has a container and is a morphism''
+\end{itemize}
+
+\end{document}
