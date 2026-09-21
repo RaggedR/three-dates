@@ -80,3 +80,35 @@ degrade with scale will then actually degrade. Under a fixed budget of 40 the sa
 number falls 96.7% → 18.2% between n=50 and n=2000. The rule generalises: when a
 fixture parameter is a ratio between two things that grow at different rates,
 holding the ratio fixed is a modelling decision, and usually the flattering one.
+
+## 9. Size the gadget before calling the solver
+
+The Tutte reduction builds `d(v) − b(v)` internal vertices per person and joins every
+one to every external, so the gadget carries `Σ d(v)(d(v)−b(v))` edges — QUADRATIC in
+the degree. At mean degree 83 that is 1.6 million edges and blossom (cubic) does not
+return. I discovered this by waiting two minutes for a solve that was never going to
+finish.
+
+**`gadgetSize()` exists so that "this will not finish" is a prediction rather than a
+discovery.** Call it before `assign()`. More generally: when a reduction blows up the
+instance, compute the blown-up size in closed form first — it is always cheaper than
+the reduction.
+
+## 10. A "tick" is the same people with new answers, not a new cohort
+
+Q3's first version modelled the next tick as `generate({seed: seed + 1})`, which
+produces *different people wearing the same ids*, and duly reported the re-solve
+infeasible. That is not the cost of cadence; it is the cost of replacing everybody.
+**When modelling the passage of time, perturb the state — do not resample it.** The
+give-away was a result too catastrophic for the question being asked: a measurement
+whose answer is "total failure" is usually measuring the wrong thing.
+
+## 11. A pre-committed edge must leave the graph
+
+`assign.py`'s pinning first decremented the quotas but left the pinned edges in play,
+so the solver could select them a *second* time — double-counting their weight and
+overshooting the quota. The internal degree assertion did not catch it, because that
+assertion runs before the pinned edges are added back. **When you pre-commit part of
+a solution, remove it from the search space in the same breath as adjusting the
+constraint.** Caught only because `assign-test.py` compares against brute force with
+the same pins; a self-consistency check would have passed.
