@@ -36,6 +36,10 @@ import { assign } from "./assign.ts";
  *  Phase 5 produces the real distribution, and labelled as one. */
 const JITTER = 0.05;
 
+/** The fraction of the cohort a solve must actually assign before it counts as
+ *  having succeeded. Nine in ten; the tenth waits a tick by §1.4. */
+const COVERAGE = 0.9;
+
 const K = 8; // see compat.ts §"Sparsification"; --prune measures the price
 
 interface Row {
@@ -130,10 +134,16 @@ async function q1(sizes: number[], seeds: number[], budget: number) {
       header();
       let lastGood: Row | null = null;
       let firstBad: Row | null = null;
-      for (const mw of [0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90]) {
+      for (const mw of [0.50, 0.55, 0.60, 0.625, 0.65, 0.675, 0.70, 0.75]) {
         const r = await solveAt(n, mw, seed, budget);
         print(r);
-        if (r.feasible) lastGood = r;
+        // FEASIBLE IS NOT ENOUGH. A solve that succeeds by peeling sixty per
+        // cent of the cohort has not assigned the cohort; it has assigned a
+        // different, smaller one and left everyone else waiting. The first
+        // version of this summary reported "feasible at mean pool 3.8" from
+        // exactly such a row. Coverage is therefore part of the criterion, and
+        // COVERAGE is what actually fails first as the pool narrows.
+        if (r.feasible && r.kept >= COVERAGE * r.n) lastGood = r;
         else if (firstBad === null) firstBad = r;
         // Once the core empties there is nothing further to learn from this row
         // block; continuing would print identical failures.
@@ -144,7 +154,9 @@ async function q1(sizes: number[], seeds: number[], budget: number) {
   }
 
   console.log("\n\n  === the answer to Q1 and Q2 ===\n");
-  console.log("     n   seed   last feasible mean pool   and how far above three");
+  console.log(`  "Feasible" below means: a 3-factor exists AND at least ` +
+    `${(100 * COVERAGE).toFixed(0)}% of the cohort is in it.\n`);
+  console.log("     n   seed   last good mean pool   x3    coverage   waited");
   for (const b of boundary) {
     if (b.lastGood === null) {
       console.log(`  ${String(b.n).padStart(4)}  ${b.seed}   never feasible`);
@@ -152,16 +164,24 @@ async function q1(sizes: number[], seeds: number[], budget: number) {
     }
     // The honest statistic is the MINIMUM pool at the boundary, not the mean:
     // the assignment fails on the worst-served person, not the average one.
+    const g = b.lastGood;
     console.log(
-      `  ${String(b.n).padStart(4)}  ${b.seed}   ${b.lastGood.meanPool.toFixed(1).padStart(19)}   ` +
-        `${(b.lastGood.meanPool / 3).toFixed(1)}x   (min pool ${b.lastGood.minPool}, ` +
-        `${b.lastGood.peeled} waited a tick)`,
+      `  ${String(b.n).padStart(4)}  ${b.seed}   ${g.meanPool.toFixed(1).padStart(17)}   ` +
+        `${(g.meanPool / 3).toFixed(1)}x   ${((100 * g.kept) / g.n).toFixed(0).padStart(7)}%   ` +
+        `${String(g.peeled).padStart(6)}`,
     );
   }
   console.log(
-    "\n  Reading (A) of §1.2 asks the loop to drive the mean pool to exactly 3.\n" +
-      "  The gap between that and the numbers above is the whole of the (A)-vs-(B)\n" +
-      "  decision, and it is now arithmetic rather than taste.",
+    "\n  Reading (A) of §1.2 asks the narrowing loop to drive the mean pool to\n" +
+      "  exactly 3, so that the count a user watches genuinely reaches three. The\n" +
+      "  gap between that and the column above is the whole of the (A)-vs-(B)\n" +
+      "  decision, and it is now arithmetic rather than taste.\n" +
+      "\n  Note WHICH constraint binds. Feasibility is not what fails first —\n" +
+      "  coverage is. Narrowing past the numbers above does not make the solve\n" +
+      "  impossible, it makes the solve succeed on a rapidly shrinking subset\n" +
+      "  while everyone else is peeled out of the cohort. A product built on\n" +
+      "  reading (A) would not show users an error; it would quietly stop\n" +
+      "  assigning most of them.",
   );
 }
 

@@ -112,3 +112,15 @@ assertion runs before the pinned edges are added back. **When you pre-commit par
 a solution, remove it from the search space in the same breath as adjusting the
 constraint.** Caught only because `assign-test.py` compares against brute force with
 the same pins; a self-consistency check would have passed.
+
+## 12. "Feasible" is not a measurement; feasible-at-what-coverage is
+
+Q1's first summary reported "a 3-factor exists at mean pool 3.8" from a row where
+30 of 50 people had been peeled out of the cohort. The solver had succeeded — on a
+different, smaller problem. **When an algorithm is allowed to drop inputs, report
+the fraction it kept alongside every success, or the success means nothing.**
+
+The corrected sweep showed that coverage is what fails first: the cohort assigned
+went 182 → 160 → 100 across two threshold steps while the solver kept returning
+"Assigned". A failure mode that never raises an error is the one that reaches
+production.
