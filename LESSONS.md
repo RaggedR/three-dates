@@ -65,3 +65,18 @@ the line is a comment above code that happens to compile, and the suite is asser
 nothing in the direction that matters. **Mutate one and watch it go red before
 recording the measurement.** Phase 1 did this; the count (9 illegal-direction, 20
 legal-direction) is quoted in the README only because of it.
+
+## 8. A density knob expressed as a fraction hides the density problem
+
+The first `fixtures.ts` gave each person a fixed *fraction* of the corpus. Because
+the corpus grows one question per arrival (§3), that makes a person in a cohort of
+a thousand answer two hundred and fifty questions, and the shared-question count
+per pair then *rises* with the market. The measurement came back at 99% and looked
+like good news.
+
+Attention is bounded and the corpus is not. **Express per-person effort as an
+absolute budget, not a share of a growing total**, and any quantity that should
+degrade with scale will then actually degrade. Under a fixed budget of 40 the same
+number falls 96.7% → 18.2% between n=50 and n=2000. The rule generalises: when a
+fixture parameter is a ratio between two things that grow at different rates,
+holding the ratio fixed is a modelling decision, and usually the flattering one.
