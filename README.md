@@ -39,6 +39,15 @@ Where it breaks: the mutual three-assignment is a **3-factor** of the
 compatibility graph, which is a global object with cycles in it, and the four
 combinators build trees. That is why `assign.py` exists.
 
+**Shapes are public; positions are private** ([DESIGN §13](DESIGN.md#13-the-channel-is-asymmetric--shapes-travel-positions-do-not),
+added 22 Sep). You must answer your own question; nobody ever sees anyone's reply.
+The matchmaker forwards *questions* between potential matches and never the answers,
+so the channel carries preferences rather than attributes, and the composite *ask →
+their runner → back to me* simply does not exist. Anonymity holds until the first
+date, where you ask everything again, of the person. The product's output is a
+warrant to ask, not a dossier — which is also why lying to the matchmaker is free to
+enter and expensive to sustain.
+
 ---
 
 ## What has been measured
@@ -230,6 +239,14 @@ leaves with their rejection rates. In particular:
 - **Everything runs against synthetic fixtures**, which contain hidden trait
   vectors so that structure exists to be found. No claim here transfers to real
   people without being re-measured.
+- **Nothing enforces the broker's promise.** §13's "the matchmaker does not forward
+  replies" is a property of an implementation, not of the architecture, and no test
+  goes red if it is deleted. Until one does, it is a decoration rather than a
+  guarantee.
+- **The anonymity claim is narrower than it reads.** Positions are private; shapes
+  are broadcast by design, and a distinctive enough question set identifies its
+  author. State it as *positions are private*, not *you are anonymous*, until
+  something enforces the stronger one.
 
 ## Running it
 

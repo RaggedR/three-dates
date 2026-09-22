@@ -445,3 +445,103 @@ in this document that could be wrong.
   measured it; so should this.
 - **The cohort is even, and a 3-factor exists.** Neither is generic. Both are
   checkable before anyone is told a number.
+
+---
+
+## 13. The channel is asymmetric — shapes travel, positions do not
+
+*Added 22 September 2026, after §§1–12. It is an addition to the brief rather than a
+reading of it: the brief says what is asked and by whom, and is silent on who may
+see a reply. That silence was doing no work, and closing it changes the object.*
+
+The rule, in three parts:
+
+1. **You must answer your own question.** Writing a question obliges you to answer it.
+2. **Nobody ever sees anyone's reply.** Replies go to the matchmaker and stop there.
+   What the matchmaker forwards to a potential match is the *question*, never the
+   answer to it.
+3. **Everyone stays anonymous until the first date, where you must ask everything
+   again** — in person, of the person.
+
+### In the algebra this is one sentence
+
+`AskC = Question ◁ Reply`: a shape is a question, a position is a valid reply to it.
+So:
+
+> **Shapes are public. Positions are private.**
+
+The privacy model is not a policy layered over the container. It is a statement about
+which half of the container is allowed to move. The shape half is broadcast; the
+position half never leaves the broker. Everything else in this section is a
+consequence.
+
+**Part 1 is a cost on authoring a shape.** To put a question into circulation you must
+occupy a position over it. `Ask ⊆ Tell`, and it prices intrusiveness without a
+moderation policy or a list of banned questions: nobody asks about income, or debt, or
+how the last one ended, unless they will say it themselves. The symmetry *is* the
+policy, and it filters for free — anyone who wants to audit without being audited
+bounces off the sign-up.
+
+There is a mechanism-design condition on part 1 and it is not optional. **The author's
+own reply must be committed at the moment of asking**, before any other person's reply
+to it can exist. Collected afterwards, it would be shaded to fit what came back, and
+the rule degrades into a politeness ritual. Commit-at-ask, or the constraint is not a
+constraint.
+
+**Part 2 deletes an arrow.** §1 says a person is a `Runner<AskC>` — somebody you can
+put a question to, who answers. The obvious composite is *Alice asks, Bob's runner
+replies, the reply returns to Alice*. **That composite does not exist here.** The only
+arrow that runs a person's runner belongs to the matchmaker, and its second leg is
+never taken. Forward and backward meet in exactly one place, and it is not a user.
+
+What survives the cut is better than what it removes. The channel now carries
+preferences rather than attributes — and the question someone spent a slot on is the
+act-form of *what I care about*, which §10 had already resolved is the signal worth
+having. "Do you own property?" is more diagnostic of its asker than any answer to it
+would be of its answerer.
+
+**Part 3 is where the deleted arrow is finally taken, out of band.** The product's
+output is not information. It is a **warrant to ask**. Three people, and the standing
+permission to put your own questions to their faces. The re-asking is the point rather
+than a redundancy: the app deliberately refuses to be a database, and hands back the
+conversation it was never going to have for you.
+
+It also disposes of verification with no machinery. Lying to the matchmaker is free —
+no human ever sees it. But the prize for lying is a date at which you must repeat the
+lie to a face, having been told in advance you would be asked again. **Cheap to enter,
+expensive to sustain**, and the cost lands exactly where it bites. No identity checks,
+no trust score, no report button.
+
+### Two things this does not yet have, stated as the guarantee ledger would
+
+**The broker's promise is MINTED-BUT-UNCONSUMED.** "The matchmaker does not forward
+replies" is currently a property of an implementation, not of an architecture. Trust
+concentrates completely: one party sees every position of every person. Name the line
+of code that behaves differently if it is false, and the test that goes red when
+somebody deletes that line — and if neither exists, the certificate is a decoration.
+A certificate nothing consumes is not a guarantee.
+
+**Shapes are fingerprints, and the anonymity claim is narrower than it reads.**
+Positions are private; shapes are broadcast by design. A distinctive enough question
+set identifies its author as surely as a name — the re-identification problem that
+eats anonymised datasets, arriving here through the one channel deliberately left
+open. *"Have you read Lawrence Langer?"* narrows the field in Melbourne to about one.
+Part 3 promises anonymity until the first date; the design as stated cannot keep that
+promise for an unusual asker, and the gap is in the shape channel, which is exactly
+the channel the product needs.
+
+Neither is a reason not to build it. Both are reasons the claim should be stated as
+*positions are private* rather than *you are anonymous*, until something enforces the
+stronger one.
+
+### What would break it — additions to §12
+
+- **Any user-visible reply.** A "see how they answered" feature, a compatibility
+  breakdown that quotes a position, a preview before the date. Each reinstates the
+  deleted arrow, and with it the incentive to answer for an audience rather than for
+  the record.
+- **Answering after seeing.** If an author's own reply can be written or revised once
+  another person's reply to that question exists, `Ask ⊆ Tell` is nominal.
+- **A privileged asker.** A paid or verified "ask directly" channel is the §1 breakage
+  again, and it breaks this section too: it gives some users the arrow everyone else
+  was denied.
